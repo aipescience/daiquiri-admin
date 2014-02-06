@@ -3,7 +3,6 @@ import sys,os
 sys.path.append(os.path.join(os.path.dirname(__file__),'../lib/'))
 
 from daiquiri_admin import DaiquiriAdmin
-daiquiri = DaiquiriAdmin('http://localhost/dwarfs2014/')
+daiquiri = DaiquiriAdmin('http://daiquiri/', username='admin', password='admin')
 
-# get a list of users
-daiquiri.get('/user/auth/user')
+print daiquiri.fetchUsers()
