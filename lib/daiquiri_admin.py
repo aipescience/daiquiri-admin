@@ -15,7 +15,11 @@ class DaiquiriAdmin():
 
         r = requests.get(url,auth=(username,password),headers=headers)
         r.raise_for_status()
-        return r.json()
+        
+        try:
+            return r.json()
+        except ValueError:
+            sys.exit(r.text)
 
     def post(self, path, data):
         url = self.baseUrl + path
@@ -27,8 +31,10 @@ class DaiquiriAdmin():
         r = requests.post(url,auth=(username,password),headers=headers,data=data)
         r.raise_for_status()
 
-        return r.json()
-
+        try:
+            return r.json()
+        except ValueError:
+            sys.exit(r.text)
 
     def getUsername(self):
         if not self.username:
@@ -60,7 +66,20 @@ class DaiquiriAdmin():
 
         return users
 
+    def fetchPassword(self,userId,type):
+        # fetch the cols
+        response = self.get('/auth/password/show/id/%s/type/%s' % (userId,type))
+        if response['status'] != 'ok':
+            raise DaiquiriException(response['errors'])
+        else:
+            return response['data']
+
     def storeUser(self, user):
+        user['newPassword'] = user['password']
+        user['confirmPassword'] = user['password']
+        user['status_id'] = 1
+        del user['password']
+
         response = self.post('/auth/user/create', user)
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
@@ -76,7 +95,7 @@ class DaiquiriAdmin():
         response = self.get('/data/columns/show/id/%s' % columnId)
         data = {
             'table_id': response['data']['table_id'],
-            'position': response['data']['position'],
+            'order': response['data']['order'],
             'name': response['data']['name'],
             'type': response['data']['type'],
             'unit': response['data']['unit'],
@@ -86,6 +105,11 @@ class DaiquiriAdmin():
         data.update(column)
 
         response = self.post('/data/columns/update/id/%s' % columnId, data)
+        if response['status'] != 'ok':
+            raise DaiquiriException(response['errors'])
+
+    def storeFunction(self, function):
+        response = self.post('/data/functions/create', function)
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
 
