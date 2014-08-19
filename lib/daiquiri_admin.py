@@ -72,7 +72,7 @@ class DaiquiriAdmin():
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
         else:
-            return response['data']
+            return response['row']
 
     def storeUser(self, user):
         user['newPassword'] = user['password']
@@ -94,13 +94,13 @@ class DaiquiriAdmin():
     def updateColumn(self, columnId, column):
         response = self.get('/data/columns/show/id/%s' % columnId)
         data = {
-            'table_id': response['data']['table_id'],
-            'order': response['data']['order'],
-            'name': response['data']['name'],
-            'type': response['data']['type'],
-            'unit': response['data']['unit'],
-            'ucd': response['data']['ucd'],
-            'description': response['data']['description']
+            'table_id': response['row']['table_id'],
+            'order': response['row']['order'],
+            'name': response['row']['name'],
+            'type': response['row']['type'],
+            'unit': response['row']['unit'],
+            'ucd': response['row']['ucd'],
+            'description': response['row']['description']
         }
         data.update(column)
 
