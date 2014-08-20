@@ -61,18 +61,27 @@ class DaiquiriAdmin():
         for row in response['rows']:
             user = {}
             for col,value in zip(cols,row['cell']):
-                user[col] = value
+                if cols != 'options':
+                    user[col] = value
             users.append(user)
 
         return users
 
-    def fetchPassword(self,userId,type):
+    def fetchUser(self, userId):
+        # fetch the cols
+        response = self.get('/auth/user/show/id/%s' % userId)
+        if response['status'] != 'ok':
+            raise DaiquiriException(response['errors'])
+        else:
+            return response['row']
+
+    def fetchPassword(self, userId, type='default'):
         # fetch the cols
         response = self.get('/auth/password/show/id/%s/type/%s' % (userId,type))
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
         else:
-            return response['row']
+            return response['data']
 
     def storeUser(self, user):
         user['newPassword'] = user['password']
@@ -82,6 +91,17 @@ class DaiquiriAdmin():
 
         response = self.post('/auth/user/create', user)
         if response['status'] != 'ok':
+            raise DaiquiriException(response['errors'])
+
+    def storeDetail(self, userId, key, value):
+        response = self.post('/auth/details/create/id/%s' % userId, {'key': key, 'value': value})
+        if response['status'] != 'ok':
+            raise DaiquiriException(response['errors'])
+
+    def activateUser(self, userId):
+        response = self.post('/auth/registration/activate/id/%s' % userId, {'submit': True})
+        if response['status'] != 'ok':
+            print response
             raise DaiquiriException(response['errors'])
 
     def fetchDatabases(self):
