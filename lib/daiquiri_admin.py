@@ -1,4 +1,5 @@
 import sys,requests,getpass
+from lxml import etree
 
 class DaiquiriAdmin():
     def __init__(self, baseUrl, username=None, password=None):
@@ -21,20 +22,27 @@ class DaiquiriAdmin():
         except ValueError:
             sys.exit(r.text)
 
-    def post(self, path, data):
+    def post(self, path, data, json=True):
         url = self.baseUrl + path
 
         username = self.getUsername()
         password = self.getPassword()
-        headers = {'Accept': 'application/json'}
+
+        if json:
+            headers = {'Accept': 'application/json'}
+        else:
+            headers = {}
 
         r = requests.post(url,auth=(username,password),headers=headers,data=data)
         r.raise_for_status()
 
-        try:
-            return r.json()
-        except ValueError:
-            sys.exit(r.text)
+        if json:
+            try:
+                return r.json()
+            except ValueError:
+                sys.exit(r.text)
+        else:
+            return r.text
 
     def getUsername(self):
         if not self.username:
@@ -132,6 +140,17 @@ class DaiquiriAdmin():
         response = self.post('/data/functions/create', function)
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
+
+    def submitUws(self, sql, tablename):
+        response = self.post('/uws/query/', {'query': sql, 'table': tablename}, json=False)
+
+        # remove first line
+        string = '\n'.join(response.split('\n')[1:])
+        root = etree.XML(string)
+        ns = '{http://www.ivoa.net/xml/UWS/v1.0}'
+        jobId = root.find(ns + 'jobId').text
+
+        response = self.post('/uws/query/' + jobId, {"phase": "run"}, json=False)
 
 class DaiquiriException(Exception):
     def __init__(self, errors):
