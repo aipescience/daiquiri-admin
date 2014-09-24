@@ -7,20 +7,27 @@ class DaiquiriAdmin():
         self.username = username
         self.password = password
 
-    def get(self, path):
+    def get(self, path, json=True):
         url = self.baseUrl + path
 
         username = self.getUsername()
         password = self.getPassword()
-        headers = {'Accept': 'application/json'}
+
+        if json:
+            headers = {'Accept': 'application/json'}
+        else:
+            headers = {}
 
         r = requests.get(url,auth=(username,password),headers=headers)
         r.raise_for_status()
         
-        try:
-            return r.json()
-        except ValueError:
-            sys.exit(r.text)
+        if json:
+            try:
+                return r.json()
+            except ValueError:
+                sys.exit(r.text)
+        else:
+            return r.text
 
     def post(self, path, data, json=True):
         url = self.baseUrl + path
@@ -34,6 +41,28 @@ class DaiquiriAdmin():
             headers = {}
 
         r = requests.post(url,auth=(username,password),headers=headers,data=data)
+        r.raise_for_status()
+
+        if json:
+            try:
+                return r.json()
+            except ValueError:
+                sys.exit(r.text)
+        else:
+            return r.text
+
+    def delete(self, path, json=True):
+        url = self.baseUrl + path
+
+        username = self.getUsername()
+        password = self.getPassword()
+
+        if json:
+            headers = {'Accept': 'application/json'}
+        else:
+            headers = {}
+
+        r = requests.delete(url,auth=(username,password),headers=headers)
         r.raise_for_status()
 
         if json:
@@ -141,16 +170,52 @@ class DaiquiriAdmin():
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
 
-    def submitUws(self, sql, tablename):
-        response = self.post('/uws/query/', {'query': sql, 'table': tablename}, json=False)
+    def fetchUwsJobs(self):
+        response = self.get('/uws/query/', json=False)
+
+        # remove first line
+        string = '\n'.join(response.split('\n')[1:])
+        root = etree.XML(string)
+        ns = '{http://www.ivoa.net/xml/UWS/v1.0}'
+        xlink = '{http://www.w3.org/1999/xlink}'
+
+        jobs = []
+        for node in root.findall(ns + 'jobref'):
+            jobId = node.attrib[xlink + 'href'].split('/')[-1]
+            jobs.append({
+                'table': node.attrib['id'],
+                'id': jobId
+            })
+
+        return jobs
+
+    def submitUws(self, sql, tablename=None):
+        data = {'query': sql}
+
+        if tablename:
+            data['table'] = tablename
+
+        response = self.post('/uws/query/', data, json=False)
 
         # remove first line
         string = '\n'.join(response.split('\n')[1:])
         root = etree.XML(string)
         ns = '{http://www.ivoa.net/xml/UWS/v1.0}'
         jobId = root.find(ns + 'jobId').text
-
+        
         response = self.post('/uws/query/' + jobId, {"phase": "run"}, json=False)
+
+        # remove first line
+        string = '\n'.join(response.split('\n')[1:])
+        root = etree.XML(string)
+        ns = '{http://www.ivoa.net/xml/UWS/v1.0}'
+
+        for node in root.find(ns + 'parameters').findall(ns + 'parameter'):
+            if node.attrib['id'] == 'table':
+                return node.text
+
+    def deleteUwsJob(self, jobId):
+        self.delete('/uws/query/' + jobId, json=False)
 
 class DaiquiriException(Exception):
     def __init__(self, errors):
