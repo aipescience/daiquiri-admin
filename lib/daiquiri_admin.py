@@ -1,4 +1,4 @@
-import sys,requests,getpass
+import sys,requests,getpass,urllib2,base64
 from lxml import etree
 
 class DaiquiriAdmin():
@@ -72,6 +72,36 @@ class DaiquiriAdmin():
                 sys.exit(r.text)
         else:
             return r.text
+
+    def download(self, url, filename, chunkSizeKB=1024, callback=None):
+
+        username = self.getUsername()
+        password = self.getPassword()
+
+        authString = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
+
+        request = urllib2.Request(url)
+        request.add_header("Authorization", "Basic %s" % authString)
+        handler = urllib2.urlopen(request)
+
+        chunkSize = int(chunkSizeKB * 1024)
+
+        if handler.headers.get('content-length') is not None:
+            fileSize = handler.headers.get('content-length')
+        else:
+            fileSize = None
+
+        #write the data to file
+        fileRead = 0
+        with open(filename, 'wb') as filePtr:
+            for chunk in iter(lambda: handler.read(chunkSize), ''):
+                fileRead += len(chunk)
+                filePtr.write(chunk)
+
+                if callback is not None:
+                    callback(fileSize, fileRead)
+
+        return True
 
     def getUsername(self):
         if not self.username:
@@ -181,10 +211,10 @@ class DaiquiriAdmin():
 
         jobs = []
         for node in root.findall(ns + 'jobref'):
-            jobId = node.attrib[xlink + 'href'].split('/')[-1]
             jobs.append({
                 'table': node.attrib['id'],
-                'id': jobId
+                'id': node.attrib[xlink + 'href'].split('/')[-1],
+                'status': node.find(ns + 'phase').text
             })
 
         return jobs
@@ -216,6 +246,27 @@ class DaiquiriAdmin():
 
     def deleteUwsJob(self, jobId):
         self.delete('/uws/query/' + jobId, json=False)
+
+    def fetchUwsResults(self, jobId, format):
+        response = self.get('/uws/query/' + jobId, json=False)
+
+        # remove first line
+        string = '\n'.join(response.split('\n')[1:])
+        root = etree.XML(string)
+        ns = '{http://www.ivoa.net/xml/UWS/v1.0}'
+        xlink = '{http://www.w3.org/1999/xlink}'
+
+        for node in root.find(ns + 'parameters').findall(ns + 'parameter'):
+            if node.attrib['id'] == 'table':
+                name = node.text
+
+        for node in root.find(ns + 'results').findall(ns + 'result'):
+
+            if format == node.attrib['id']:
+                url = node.attrib[xlink + 'href']
+                self.download(url,name + '.' + format)
+
+        # return jobs
 
 class DaiquiriException(Exception):
     def __init__(self, errors):
