@@ -165,6 +165,11 @@ class DaiquiriAdmin():
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
 
+    def removeDetail(self, userId, key):
+        response = self.post('/auth/details/delete/id/%s' % userId, {'key': key})
+        if response['status'] != 'ok':
+            raise DaiquiriException(response['errors'])
+
     def activateUser(self, userId):
         response = self.post('/auth/registration/activate/id/%s' % userId, {'submit': True})
         if response['status'] != 'ok':
