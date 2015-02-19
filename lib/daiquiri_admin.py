@@ -218,7 +218,7 @@ class DaiquiriAdmin():
         jobs = []
         for node in root.findall(ns + 'jobref'):
             jobs.append({
-                'table': node.attrib['id'],   # This is actually the job's name, not the 'intended' table name in parameter list. Maybe rename to 'name'?
+                'name': node.attrib['id'],   # This is actually the job's name, not the 'intended' table name in parameter list. Maybe rename to 'name'?
                 'id': node.attrib[xlink + 'href'].split('/')[-1],
                 'status': node.find(ns + 'phase').text
             })
@@ -333,7 +333,7 @@ class DaiquiriAdmin():
 
         joblist = []
         for job in jobs:
-            if fnmatch.fnmatch(job['table'], jobname):
+            if fnmatch.fnmatch(job['name'], jobname):
                 if fnmatch.fnmatch(job['status'], phase):
                     joblist.append(job)
 
