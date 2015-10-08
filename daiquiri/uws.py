@@ -1,8 +1,6 @@
 import fnmatch
 from lxml import etree
 
-from daiquiri.exceptions import DaiquiriException
-
 
 class UWS():
     def __init__(self, connection):
@@ -38,23 +36,23 @@ class UWS():
         # remove first line and parse xml
         string = '\n'.join(response.split('\n')[1:])
         root = etree.XML(string)
+        job_id = root.find(self.ns + 'jobId').text
 
-        response = self.connection.post('/uws/query/' + jobId, {"phase": "run"}, json=False)
+        response = self.connection.post('/uws/query/' + job_id, {"phase": "run"}, json=False)
 
         # remove first line
         string = '\n'.join(response.split('\n')[1:])
         root = etree.XML(string)
 
-
         for node in root.find(self.ns + 'parameters').findall(self.ns + 'parameter'):
             if node.attrib['id'] == 'table':
-                return jobId, node.text
+                return job_id, node.text
 
-    def delete_job(self, jobId):
-        self.connection.delete('/uws/query/' + jobId, json=False)
+    def delete_job(self, job_id):
+        self.connection.delete('/uws/query/' + job_id, json=False)
 
-    def fetch_results(self, jobId, format):
-        response = self.connection.get('/uws/query/' + jobId, json=False)
+    def fetch_results(self, job_id, format):
+        response = self.connection.get('/uws/query/' + job_id, json=False)
 
         # remove first line and parse xml
         string = '\n'.join(response.split('\n')[1:])
@@ -68,12 +66,12 @@ class UWS():
 
             if format == node.attrib['id']:
                 url = node.attrib[self.xlink + 'href']
-                self.connection.download(url,name + '.' + format)
+                self.connection.download(url, name + '.' + format)
 
-    def fetch_result_url(self, jobId, format):
-        '''Get url of result for given jobId and format'''
+    def fetch_result_url(self, job_id, format):
+        '''Get url of result for given job_id and format'''
 
-        response = self.connection.get('/uws/query/' + jobId + 'results/', json=False)
+        response = self.connection.get('/uws/query/' + job_id + 'results/', json=False)
 
         # remove first line and parse xml
         string = '\n'.join(response.split('\n')[1:])
@@ -86,20 +84,20 @@ class UWS():
 
         return url
 
-    def get_job(self, jobId):
-        '''Get details of the job with given jobId'''
+    def get_job(self, job_id):
+        '''Get details of the job with given job_id'''
 
-        response = self.connection.get('/uws/query/' + jobId , json=False)
+        response = self.connection.get('/uws/query/' + job_id, json=False)
 
         # remove first line and parse xml
         string = '\n'.join(response.split('\n')[1:])
         root = etree.XML(string)
 
         job = {}
-        job['id'] = root.find(ns + 'jobId').text
-        job['status'] = root.find(ns + 'phase').text
+        job['id'] = root.find(self.ns + 'job_id').text
+        job['status'] = root.find(self.ns + 'phase').text
 
-        if root.find(ns + 'errorSummary') is not None:
+        if root.find(self.ns + 'errorSummary') is not None:
             node = root.find(self.ns + 'errorSummary').find(self.ns + 'message')
             job['errors'] = node.text
 

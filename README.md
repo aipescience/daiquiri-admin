@@ -23,7 +23,7 @@ args = parser.parse_args()
 
 connection = Connection(args.host, username=args.username)
 
-for user in Auth(connection).fetchUsers():
+for user in Auth(connection).fetch_users():
     print user['email']
 ```
 

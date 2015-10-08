@@ -6,7 +6,7 @@ import subprocess
 
 
 class Machine():
-    def __init__(self, dryrun=True, default_gid=2000, uid_range=[2000,3000]):
+    def __init__(self, dryrun=True, default_gid=2000, uid_range=[2000, 3000]):
         self.dryrun = dryrun
         self.default_gid = default_gid
         self.uid_range = uid_range
@@ -25,9 +25,9 @@ class Machine():
 
     def chown(self, path, uid, gid):
         if self.dryrun:
-            print 'os.chown(\'%s\',%s,%s)' % (path,uid,gid)
+            print 'os.chown(\'%s\',%s,%s)' % (path, uid, gid)
         else:
-            os.chown(path,uid,gid)
+            os.chown(path, uid, gid)
 
     def get_new_uid(self):
         uid = self.uid_range[0]
@@ -36,7 +36,7 @@ class Machine():
                 uid = system_user.pw_uid
         return uid + 1
 
-    def get_full_name(self,user):
+    def get_full_name(self, user):
         return user['details']['firstname'] + ' ' + user['details']['lastname']
 
     def create_user(self, user, password):
@@ -79,10 +79,10 @@ class Machine():
         fullname = self.get_full_name(user)
 
         # create new user on the machine
-        print 'creating user',username
-        self.call("useradd -m -s /bin/bash -u %i -g %i -p '%s' -c '%s' %s" % (uid,gid,password,fullname,username))
+        print 'creating user', username
+        self.call("useradd -m -s /bin/bash -u %i -g %i -p '%s' -c '%s' %s" % (uid, gid, password, fullname, username))
 
-        return uid,gid
+        return uid, gid
 
     def update_user(self, user, password):
         # get the username
@@ -97,7 +97,7 @@ class Machine():
 
         # enable the user if he or she was disabled
         if (system_password.sp_pwd.startswith('!')):
-            print 'unlocking user',username
+            print 'unlocking user', username
             self.call("usermod -U %s" % username)
 
             # fetch proper password
@@ -110,32 +110,31 @@ class Machine():
         fullname = self.get_full_name(user)
 
         if (fullname != system_user.pw_gecos.decode('utf-8')):
-            print 'updating fullname (i.e. comment) for',username
-            self.call(u'usermod -c \'%s\' %s' % (fullname,username))
+            print 'updating fullname (i.e. comment) for', username
+            self.call(u'usermod -c \'%s\' %s' % (fullname, username))
 
         # check uid
         if (int(user['details']['UID']) != system_user.pw_uid):
-            print 'updating uid for',username
-            self.call("usermod -u '%s' %s" % (user['details']['UID'],username))
+            print 'updating uid for', username
+            self.call("usermod -u '%s' %s" % (user['details']['UID'], username))
             uid_gid_changed = True
 
         # check gid
         if (int(user['details']['GID']) != system_user.pw_gid):
-            print 'updating gid for',username
-            self.call("usermod -g '%s' %s" % (user['details']['GID'],username))
+            print 'updating gid for', username
+            self.call("usermod -g '%s' %s" % (user['details']['GID'], username))
             uid_gid_changed = True
 
         # check password
         if (password != system_password.sp_pwd):
-            print 'updating password for',username
-            self.call("usermod -p '%s' %s" % (password,username))
+            print 'updating password for', username
+            self.call("usermod -p '%s' %s" % (password, username))
 
         return uid_gid_changed
 
     def disable_user(self, username):
         # check if the user exists, if not return silently
         try:
-            system_user = pwd.getpwnam(username)
             system_password = spwd.getspnam(username)
         except KeyError:
             return
@@ -145,5 +144,5 @@ class Machine():
             return
 
         # lock the user
-        print 'locking user',username
+        print 'locking user', username
         self.call("usermod -L %s" % username)

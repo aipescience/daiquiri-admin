@@ -22,7 +22,7 @@ class Connection():
         else:
             headers = {}
 
-        r = requests.get(url,auth=(username,password),headers=headers)
+        r = requests.get(url, auth=(username, password), headers=headers)
         r.raise_for_status()
 
         if json:
@@ -44,7 +44,7 @@ class Connection():
         else:
             headers = {}
 
-        r = requests.post(url,auth=(username,password),headers=headers,data=data)
+        r = requests.post(url, auth=(username, password), headers=headers, data=data)
         r.raise_for_status()
 
         if json:
@@ -66,7 +66,7 @@ class Connection():
         else:
             headers = {}
 
-        r = requests.delete(url,auth=(username,password),headers=headers)
+        r = requests.delete(url, auth=(username, password), headers=headers)
         r.raise_for_status()
 
         if json:

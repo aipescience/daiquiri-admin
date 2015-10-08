@@ -17,7 +17,7 @@ class Auth():
         users = []
         for row in response['rows']:
             user = {}
-            for col,value in zip(cols,row['cell']):
+            for col, value in zip(cols, row['cell']):
                 if cols != 'options':
                     user[col] = value
             users.append(user)
@@ -44,7 +44,7 @@ class Auth():
 
     def fetch_password(self, user_id, type='default'):
         # fetch the cols
-        response = self.connection.get('/auth/password/show/id/%s/type/%s' % (user_id,type))
+        response = self.connection.get('/auth/password/show/id/%s/type/%s' % (user_id, type))
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
         else:
