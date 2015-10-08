@@ -1,10 +1,11 @@
 from daiquiri.exceptions import DaiquiriException
 
+
 class Auth():
     def __init__(self, connection):
         self.connection = connection
 
-    def fetchUsers(self):
+    def fetch_users(self):
         # fetch the cols
         response = self.connection.get('/auth/user/cols')
         cols = [row['name'] for row in response['cols']]
@@ -23,33 +24,33 @@ class Auth():
 
         return users
 
-    def fetchUser(self, userId):
+    def fetch_user(self, user_id):
         # fetch the cols
-        response = self.connection.get('/auth/user/show/id/%s' % userId)
+        response = self.connection.get('/auth/user/show/id/%s' % user_id)
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
         else:
             return response['row']
 
-    def fetchUserByUsername(self, username):
-        for user in self.fetchUsers():
+    def fetch_user_by_username(self, username):
+        for user in self.fetch_users():
             if user['username'] == username:
-                return self.fetchUser(user['id'])
+                return self.fetch_user(user['id'])
 
-    def fetchUserByEmail(self, email):
-        for user in self.fetchUsers():
+    def fetch_user_by_email(self, email):
+        for user in self.fetch_users():
             if user['email'] == email:
-                return self.fetchUser(user['id'])
+                return self.fetch_user(user['id'])
 
-    def fetchPassword(self, userId, type='default'):
+    def fetch_password(self, user_id, type='default'):
         # fetch the cols
-        response = self.connection.get('/auth/password/show/id/%s/type/%s' % (userId,type))
+        response = self.connection.get('/auth/password/show/id/%s/type/%s' % (user_id,type))
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
         else:
             return response['data']
 
-    def storeUser(self, user):
+    def store_user(self, user):
         user['newPassword'] = user['password']
         user['confirmPassword'] = user['password']
         user['status_id'] = 1
@@ -59,18 +60,18 @@ class Auth():
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
 
-    def storeDetail(self, userId, key, value):
-        response = self.connection.post('/auth/details/create/id/%s' % userId, {'key': key, 'value': value})
+    def store_detail(self, user_id, key, value):
+        response = self.connection.post('/auth/details/create/id/%s' % user_id, {'key': key, 'value': value})
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
 
-    def removeDetail(self, userId, key):
-        response = self.connection.post('/auth/details/delete/id/%s' % userId, {'key': key})
+    def remove_detail(self, user_id, key):
+        response = self.connection.post('/auth/details/delete/id/%s' % user_id, {'key': key})
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
 
-    def activateUser(self, userId):
-        response = self.connection.post('/auth/registration/activate/id/%s' % userId, {'submit': True})
+    def activate_user(self, user_id):
+        response = self.connection.post('/auth/registration/activate/id/%s' % user_id, {'submit': True})
         if response['status'] != 'ok':
             print response
             raise DaiquiriException(response['errors'])

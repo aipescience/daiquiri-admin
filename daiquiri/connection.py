@@ -4,6 +4,7 @@ import urllib2
 import base64
 import getpass
 
+
 class Connection():
     def __init__(self, baseUrl, username=None, password=None):
         self.baseUrl = baseUrl
@@ -13,8 +14,8 @@ class Connection():
     def get(self, path, json=True):
         url = self.baseUrl + path
 
-        username = self.getUsername()
-        password = self.getPassword()
+        username = self.get_username()
+        password = self.get_password()
 
         if json:
             headers = {'Accept': 'application/json'}
@@ -35,8 +36,8 @@ class Connection():
     def post(self, path, data, json=True):
         url = self.baseUrl + path
 
-        username = self.getUsername()
-        password = self.getPassword()
+        username = self.get_username()
+        password = self.get_password()
 
         if json:
             headers = {'Accept': 'application/json'}
@@ -57,8 +58,8 @@ class Connection():
     def delete(self, path, json=True):
         url = self.baseUrl + path
 
-        username = self.getUsername()
-        password = self.getPassword()
+        username = self.get_username()
+        password = self.get_password()
 
         if json:
             headers = {'Accept': 'application/json'}
@@ -78,8 +79,8 @@ class Connection():
 
     def download(self, url, filename, chunkSizeKB=1024, callback=None):
 
-        username = self.getUsername()
-        password = self.getPassword()
+        username = self.get_username()
+        password = self.get_password()
 
         authString = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
 
@@ -106,13 +107,13 @@ class Connection():
 
         return True
 
-    def getUsername(self):
+    def get_username(self):
         if not self.username:
             self.username = getpass.getuser()
 
         return self.username
 
-    def getPassword(self):
+    def get_password(self):
         if not self.password:
             self.password = getpass.getpass()
 

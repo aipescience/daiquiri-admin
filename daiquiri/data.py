@@ -1,18 +1,19 @@
 from daiquiri.exceptions import DaiquiriException
 
+
 class Data():
     def __init__(self, connection):
         self.connection = connection
 
-    def fetchDatabases(self):
+    def fetch_databases(self):
         response = self.connection.get('/data/databases/')
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
         else:
             return response['databases']
 
-    def updateColumn(self, columnId, column):
-        response = self.connection.get('/data/columns/show/id/%s' % columnId)
+    def update_column(self, column_id, column):
+        response = self.connection.get('/data/columns/show/id/%s' % column_id)
         data = {
             'table_id': response['row']['table_id'],
             'order': response['row']['order'],
@@ -24,11 +25,11 @@ class Data():
         }
         data.update(column)
 
-        response = self.connection.post('/data/columns/update/id/%s' % columnId, data)
+        response = self.connection.post('/data/columns/update/id/%s' % column_id, data)
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
 
-    def storeFunction(self, function):
+    def store_function(self, function):
         response = self.connection.post('/data/functions/create', function)
         if response['status'] != 'ok':
             raise DaiquiriException(response['errors'])
