@@ -24,10 +24,13 @@ class Machine():
             os.mkdir(path)
 
     def chown(self, path, uid, gid):
+        u = int(uid)
+        g = int(gid)
+
         if self.dryrun:
-            print 'os.chown(\'%s\',%s,%s)' % (path, uid, gid)
+            print 'os.chown(\'%s\', %i, %i)' % (path, u, g)
         else:
-            os.chown(path, uid, gid)
+            os.chown(path, u, g)
 
     def get_new_uid(self):
         uid = self.uid_range[0]
