@@ -6,7 +6,7 @@ import subprocess
 
 
 class Machine():
-    def __init__(self, dryrun=True, default_gid=2000, uid_range=[2000, 3000]):
+    def __init__(self, dryrun=False, default_gid=2000, uid_range=[2000, 3000]):
         self.dryrun = dryrun
         self.default_gid = default_gid
         self.uid_range = uid_range

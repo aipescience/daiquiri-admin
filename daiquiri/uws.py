@@ -3,8 +3,9 @@ from lxml import etree
 
 
 class UWS():
-    def __init__(self, connection):
+    def __init__(self, connection, dryrun=False):
         self.connection = connection
+        self.dryrun = dryrun
         self.ns = '{http://www.ivoa.net/xml/UWS/v1.0}'
         self.xlink = '{http://www.w3.org/1999/xlink}'
 
@@ -26,30 +27,34 @@ class UWS():
         return jobs
 
     def submit(self, sql, tablename=None):
-        data = {'query': sql}
+        if not self.dryrun:
+            data = {'query': sql}
 
-        if tablename:
-            data['table'] = tablename
+            if tablename:
+                data['table'] = tablename
 
-        response = self.connection.post('/uws/query/', data, json=False)
+            response = self.connection.post('/uws/query/', data, json=False)
 
-        # remove first line and parse xml
-        string = '\n'.join(response.split('\n')[1:])
-        root = etree.XML(string)
-        job_id = root.find(self.ns + 'jobId').text
+            # remove first line and parse xml
+            string = '\n'.join(response.split('\n')[1:])
+            root = etree.XML(string)
+            job_id = root.find(self.ns + 'jobId').text
 
-        response = self.connection.post('/uws/query/' + job_id, {"phase": "run"}, json=False)
+            response = self.connection.post('/uws/query/' + job_id, {"phase": "run"}, json=False)
 
-        # remove first line
-        string = '\n'.join(response.split('\n')[1:])
-        root = etree.XML(string)
+            # remove first line
+            string = '\n'.join(response.split('\n')[1:])
+            root = etree.XML(string)
 
-        for node in root.find(self.ns + 'parameters').findall(self.ns + 'parameter'):
-            if node.attrib['id'] == 'table':
-                return job_id, node.text
+            for node in root.find(self.ns + 'parameters').findall(self.ns + 'parameter'):
+                if node.attrib['id'] == 'table':
+                    return job_id, node.text
+        else:
+            return 0, ''
 
     def delete_job(self, job_id):
-        self.connection.delete('/uws/query/' + job_id, json=False)
+        if not self.dryrun:
+            self.connection.delete('/uws/query/' + job_id, json=False)
 
     def fetch_results(self, job_id, format):
         response = self.connection.get('/uws/query/' + job_id, json=False)

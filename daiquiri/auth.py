@@ -2,8 +2,9 @@ from daiquiri.exceptions import DaiquiriException
 
 
 class Auth():
-    def __init__(self, connection):
+    def __init__(self, connection, dryrun=False):
         self.connection = connection
+        self.dryrun = dryrun
 
     def fetch_users(self):
         # fetch the cols
@@ -51,27 +52,31 @@ class Auth():
             return response['data']
 
     def store_user(self, user):
-        user['newPassword'] = user['password']
-        user['confirmPassword'] = user['password']
-        user['status_id'] = 1
-        del user['password']
+        if not self.dryrun:
+            user['newPassword'] = user['password']
+            user['confirmPassword'] = user['password']
+            user['status_id'] = 1
+            del user['password']
 
-        response = self.connection.post('/auth/user/create', user)
-        if response['status'] != 'ok':
-            raise DaiquiriException(response['errors'])
+            response = self.connection.post('/auth/user/create', user)
+            if response['status'] != 'ok':
+                raise DaiquiriException(response['errors'])
 
     def store_detail(self, user_id, key, value):
-        response = self.connection.post('/auth/details/create/id/%s' % user_id, {'key': key, 'value': value})
-        if response['status'] != 'ok':
-            raise DaiquiriException(response['errors'])
+        if not self.dryrun:
+            response = self.connection.post('/auth/details/create/id/%s' % user_id, {'key': key, 'value': value})
+            if response['status'] != 'ok':
+                raise DaiquiriException(response['errors'])
 
     def remove_detail(self, user_id, key):
-        response = self.connection.post('/auth/details/delete/id/%s' % user_id, {'key': key})
-        if response['status'] != 'ok':
-            raise DaiquiriException(response['errors'])
+        if not self.dryrun:
+            response = self.connection.post('/auth/details/delete/id/%s' % user_id, {'key': key})
+            if response['status'] != 'ok':
+                raise DaiquiriException(response['errors'])
 
     def activate_user(self, user_id):
-        response = self.connection.post('/auth/registration/activate/id/%s' % user_id, {'submit': True})
-        if response['status'] != 'ok':
-            print response
-            raise DaiquiriException(response['errors'])
+        if not self.dryrun:
+            response = self.connection.post('/auth/registration/activate/id/%s' % user_id, {'submit': True})
+            if response['status'] != 'ok':
+                print response
+                raise DaiquiriException(response['errors'])
