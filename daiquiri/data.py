@@ -13,6 +13,22 @@ class Data():
         else:
             return response['databases']
 
+    def update_table(self, table_id, table):
+        if not self.dryrun:
+            response = self.connection.get('/data/tables/show/id/%s' % table_id)
+            data = {
+                'database_id': response['row']['database_id'],
+                'order': response['row']['order'],
+                'name': response['row']['name'],
+                'description': response['row']['description'],
+                'publication_role_id': response['row']['publication_role_id']
+            }
+            data.update(table)
+
+            response = self.connection.post('/data/tables/update/id/%s' % table_id, data)
+            if response['status'] != 'ok':
+                raise DaiquiriException(response['errors'])
+
     def update_column(self, column_id, column):
         if not self.dryrun:
             response = self.connection.get('/data/columns/show/id/%s' % column_id)
