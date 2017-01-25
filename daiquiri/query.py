@@ -15,3 +15,14 @@ class Query():
             raise DaiquiriException(response['errors'])
         else:
             return response['rows']
+
+    def remove_job(self, id):
+        response = self.connection.post('/query/jobs/remove/id/'+id, {
+            'submit': "Remove Job"
+        })
+
+        if response['status'] != 'ok':
+            raise DaiquiriException(response['errors'])
+        else:
+            return response
+
